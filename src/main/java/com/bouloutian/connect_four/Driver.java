@@ -1,4 +1,7 @@
 package com.bouloutian.connect_four;
+
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -10,10 +13,14 @@ public class Driver {
 	public static void main(String[] args) {
 		System.out.println("Starting Connect Four Analysis");
 		try {
-			BufferedImage image = ImageIO.read(new File("res/GlassImage.png"));
-			ConnectFourVision.getMoveForImage(image);
+			// 622 457
+			BufferedImage image = ImageIO.read(new File("res/GlassImage2.jpg"));
+			int bestMove = ConnectFourVision.getMoveForImage(image);
+			System.out.println("The best move is to go in column " + bestMove
+					+ ".");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (VisionException e) {
 			e.printStackTrace();
 		}
 		System.out.println("Done");

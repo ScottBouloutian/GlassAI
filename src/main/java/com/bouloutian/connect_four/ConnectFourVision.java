@@ -1,4 +1,5 @@
 package com.bouloutian.connect_four;
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -17,10 +18,12 @@ import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
+
 import java.awt.image.DataBufferByte;
 
 public class ConnectFourVision {
@@ -28,63 +31,65 @@ public class ConnectFourVision {
 	private static final int NUM_THRESHOLDS = 2;
 	private static Mat originalBoardImage;
 
-	public static int getMoveForImage(BufferedImage image) {
+	public static int getMoveForImage(BufferedImage image)
+			throws VisionException {
 		// Load the OpenCV Library
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
 		// Load the connect four original image
 		originalBoardImage = bufferedImageToMat(image);
+		
+		// Resize the image to a more manageable size
+		Imgproc.resize(originalBoardImage, originalBoardImage, new Size(622,457));
 
 		// Create a copy of the original image to use
 		Mat img = originalBoardImage.clone();
 
+		showResult(img);
+		
 		// Apply thresholding techniques the board image
 		Mat boardThreshold = generateBoardThreshold(img);
 		showResult(boardThreshold);
 
 		// Generate a mask from the thresholded board image
-		//Mat projection = generateBoardProjection(boardThreshold.clone());
-		//showResult(projection);
+		Mat projection = generateBoardProjection(boardThreshold.clone());
+		showResult(projection);
 
 		// Find red tokens in the image
-		//LinkedList<Circle> redTokens = findTokens(projection, Color.RED);
+		LinkedList<Circle> redTokens = findTokens(projection, Color.RED);
 
 		// Find yellow tokens in the image
-		//LinkedList<Circle> yellowTokens = findTokens(projection, Color.YELLOW);
+		LinkedList<Circle> yellowTokens = findTokens(projection, Color.YELLOW);
+
+		// Verify the number of tokens
+		int tokenDifference = redTokens.size() - yellowTokens.size();
+		if (Math.abs(tokenDifference) > 1) {
+			throw new VisionException("Invalid numbers of game pieces.");
+		}
 
 		// Calculate the supposed positions of the pieces
-		//Board board = calculateTokenPositions(projection.size(), redTokens,
-		//		yellowTokens);
-		//board.display();
+		Board board = calculateTokenPositions(projection.size(), redTokens,
+				yellowTokens);
+		board.display();
 
+		// Find whose turn it is
+		char userTurn = Board.MARK_RED;
+		if (tokenDifference > 0) {
+			userTurn = Board.MARK_BLACK;
+		}
+
+		// Display whose turn it is
+		if(userTurn == Board.MARK_RED){
+			System.out.println("It is Red's turn.");
+		}else{
+			System.out.println("It is Yellow's turn.");
+		}
+		
 		// Initialize the minimax structure to find a good move
-		//Minimax minimax = new Minimax(board, 8);
-		//int bestMove = minimax.alphaBeta(Board.MARK_RED);
-
-		// Create and display a drawing for debugging and visualization purposes
-		//Mat drawing = Mat.zeros(projection.size(), projection.type());
-		//for (Circle circle : redTokens) {
-		//	Core.circle(drawing, circle.getCenter(), circle.getRadius(),
-		//			new Scalar(0, 0, 255), -1);
-		//}
-		//for (Circle circle : yellowTokens) {
-		//	Core.circle(drawing, circle.getCenter(), circle.getRadius(),
-		//			new Scalar(0, 255, 255), -1);
-		//}
-		//Size boardBounds = projection.size();
-//		final float BLOCK_WIDTH = (float) boardBounds.width / Board.COLUMNS;
-//		final float BLOCK_HEIGHT = (float) boardBounds.height / Board.ROWS;
-//		for (int row = 0; row < Board.ROWS; row++) {
-//			for (int col = 0; col < Board.COLUMNS; col++) {
-//				Point point = new Point(col * BLOCK_WIDTH + BLOCK_WIDTH / 2,
-//						(Board.ROWS - row - 1) * BLOCK_HEIGHT + BLOCK_HEIGHT
-//								/ 2);
-//				Core.circle(drawing, point, 1, new Scalar(255, 255, 255), 1);
-//			}
-//		}
-//		showResult(drawing);
-//
-		return 0;
+		Minimax minimax = new Minimax(board, 10);
+		int bestMove = minimax.alphaBeta(userTurn);
+		
+		return bestMove;
 	}
 
 	private static Mat bufferedImageToMat(BufferedImage bufferedImage) {
@@ -108,11 +113,13 @@ public class ConnectFourVision {
 								/ 2);
 				for (Circle token : redTokens) {
 					if (token.containsPoint(point)) {
+						redTokens.remove(token);
 						result.set(col, Board.MARK_RED);
 					}
 				}
 				for (Circle token : yellowTokens) {
 					if (token.containsPoint(point)) {
+						yellowTokens.remove(token);
 						result.set(col, Board.MARK_BLACK);
 					}
 				}
@@ -127,6 +134,7 @@ public class ConnectFourVision {
 		Mat boardThreshold = new Mat();
 		Imgproc.threshold(boardDist, boardThreshold, 50, 255,
 				Imgproc.THRESH_BINARY_INV);
+		Imgproc.dilate(boardThreshold, boardThreshold, new Mat());
 		LinkedList<MatOfPoint> contours = new LinkedList<MatOfPoint>();
 		Mat hierarchy = new Mat();
 		Imgproc.findContours(boardThreshold, contours, hierarchy,
@@ -147,11 +155,11 @@ public class ConnectFourVision {
 	}
 
 	// Generates a thresholded image of the board based on each pixel's distance
-	// from the board color
+	// from the board color.
 	// Repeated thresholding is used to try to get as much of the board as
-	// possible
-	// The resultant image should be white where teh board is lcoated and black
-	// everywhere else
+	// possible.
+	// The resultant image should be white where the board is located and black
+	// everywhere else.
 	private static Mat generateBoardThreshold(Mat originalImage) {
 		Mat boardDist;
 		Mat boardThreshold = new Mat();
@@ -163,7 +171,7 @@ public class ConnectFourVision {
 			boardDist = distanceMatrixFromColor(originalImage, color);
 			Imgproc.threshold(boardDist, boardThreshold, 50, 255,
 					Imgproc.THRESH_BINARY_INV);
-			// Imgproc.blur(boardThreshold, boardThreshold, new Size(3,3));
+			Imgproc.blur(boardThreshold, boardThreshold, new Size(3, 3));
 			if (i < NUM_THRESHOLDS - 1) {
 				int n = 0;
 				int r = 0;
@@ -195,55 +203,62 @@ public class ConnectFourVision {
 		return boardThreshold;
 	}
 
-	private static Mat generateBoardProjection(Mat boardThreshold) {
+	private static Mat generateBoardProjection(Mat boardThreshold)
+			throws VisionException {
 
 		// Find the polygon enclosing the blue connect four board
 		LinkedList<MatOfPoint> contours = new LinkedList<MatOfPoint>();
 		Mat hierarchy = new Mat();
 		Imgproc.findContours(boardThreshold, contours, hierarchy,
 				Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE, new Point(0, 0));
-		int contourIndex = 0;
+		int maxContourIndex = 0;
+		double maxArea = 0;
 		for (int i = 0; i < contours.size(); i++) {
 			double area = Imgproc.contourArea(contours.get(i));
-			if (area > 1000) {
-				contourIndex = i;
+			if (area > maxArea) {
+				maxArea = area;
+				maxContourIndex = i;
 			}
+		}
+
+		// Calculate the percent of the image the detected blue area makes up
+		double percentSpace = maxArea
+				/ (boardThreshold.width() * boardThreshold.height()) * 100;
+		System.out.println("The board occupies " + Math.round(percentSpace)
+				+ "% of the image.");
+
+		// Throw an exception if the detected blue area is too small
+		if (percentSpace < 20) {
+			throw new VisionException(
+					"A sufficiently large board could not be detected.");
 		}
 
 		// Find possible border lines of the enclosing polygon
 		Mat newImage = Mat.zeros(boardThreshold.size(), boardThreshold.type());
 		Mat debugImage = originalBoardImage.clone();
-		Imgproc.drawContours(newImage, contours, contourIndex, new Scalar(255));
-		Imgproc.drawContours(debugImage, contours, contourIndex, new Scalar(0,
-				0, 255), 3);
+		Imgproc.drawContours(newImage, contours, maxContourIndex, new Scalar(
+				255));
+		Imgproc.drawContours(debugImage, contours, maxContourIndex, new Scalar(
+				0, 0, 255), 3);
 		Mat lines = new Mat();
 		Imgproc.HoughLines(newImage, lines, 1, Math.PI / 180, 75);
-		LinkedList<Line> verticalLines = new LinkedList<Line>();
-		LinkedList<Line> horizontalLines = new LinkedList<Line>();
+		LinkedList<Line> detectedLines = new LinkedList<Line>();
 		for (int i = 0; i < lines.cols(); i++) {
 			double[] info = lines.get(0, i);
 			Line line = new Line(info[0], info[1]);
+			Core.clipLine(
+					new Rect(0, 0, boardThreshold.width(), boardThreshold
+							.height()), line.getPt1(), line.getPt2());
 			Core.line(debugImage, line.getPt1(), line.getPt2(), new Scalar(0,
 					255, 0), 3);
-			switch (line.getLineType()) {
-			case LINE_VERTICAL:
-				line.adjustVerticalLineForHeight(boardThreshold.height());
-				verticalLines.push(line);
-				break;
-			case LINE_HORIZONTAL:
-				line.adjustHorizontalLineForWidth(boardThreshold.width());
-				horizontalLines.push(line);
-				break;
-			default:
-				break;
-			}
+			detectedLines.push(line);
 		}
-		System.out.println("There are " + lines.cols()
+		System.out.println("There are " + detectedLines.size()
 				+ " lines that were detected.");
 		showResult(debugImage);
 
 		// Get the corners of the polygon and apply the transform
-		Mat corners1 = calculateBorderFromLines(verticalLines, horizontalLines);
+		Mat corners1 = calculateBorderFromLines(detectedLines);
 		Size resultSize = originalBoardImage.size();
 		double[] data1 = { 0, 0 };
 		double[] data2 = { resultSize.width, 0 };
@@ -263,16 +278,22 @@ public class ConnectFourVision {
 
 	// Given lists of horizontal and vertical lines on the border of the image,
 	// determine the border rectangle of the image
-	private static Mat calculateBorderFromLines(LinkedList<Line> verticalLines,
-			LinkedList<Line> horizontalLines) {
+	private static Mat calculateBorderFromLines(LinkedList<Line> lines)
+			throws VisionException {
 
 		// Create a list of every intersection
 		LinkedList<Point> points = new LinkedList<Point>();
-		for (Line vertLine : verticalLines) {
-			for (Line horiLine : horizontalLines) {
-				points.add(vertLine.intersectionWith(horiLine));
+		for (int i = 0; i < lines.size(); i++) {
+			for (int j = i + 1; j < lines.size(); j++) {
+				Line line1 = lines.get(i);
+				Line line2 = lines.get(j);
+				Point point = line1.getIntersectionPoint(line2);
+				if (!line1.similarTheta(line2) && point != null) {
+					points.add(point);
+				}
 			}
 		}
+		System.out.println(points.size() + " intersections detected.");
 
 		// Find the average of all the points
 		Point average = averagePoints(points);
@@ -296,6 +317,13 @@ public class ConnectFourVision {
 					bottomRightPoints.add(point);
 				}
 			}
+		}
+
+		if (topLeftPoints.size() == 0 || topRightPoints.size() == 0
+				|| bottomLeftPoints.size() == 0
+				|| bottomRightPoints.size() == 0) {
+			throw new VisionException(
+					"Could not identify the corners of the game board.");
 		}
 
 		// Average the points in each of the categories
