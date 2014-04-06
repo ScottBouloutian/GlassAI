@@ -15,10 +15,12 @@
  */
 package com.google.glassware;
 
+import com.bouloutian.connect_four.AmazonInterface;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.mirror.Mirror;
+import com.google.api.services.mirror.model.Attachment;
 import com.google.api.services.mirror.model.Location;
 import com.google.api.services.mirror.model.MenuItem;
 import com.google.api.services.mirror.model.Notification;
@@ -27,6 +29,7 @@ import com.google.api.services.mirror.model.TimelineItem;
 import com.google.api.services.mirror.model.UserAction;
 import com.google.common.collect.Lists;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +38,7 @@ import java.io.Writer;
 import java.util.logging.Logger;
 import java.util.Random;
 
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -130,9 +134,17 @@ public class NotifyServlet extends HttpServlet {
           caption = "";
         }
 
+        // START OF THE CODE THAT I ADDED
+        Attachment attachment = timelineItem.getAttachments().get(0);
+        InputStream stream = MirrorClient.getAttachmentInputStream(credential, timelineItem.getId(), attachment.getId());
+        BufferedImage image=ImageIO.read(stream);
+        String timelineMessage;
+		timelineMessage = AmazonInterface.messageForURL(attachment.getContentType());
+        // END OF THE CODE THAT I ADDED
+        
         // Create a new item with just the values that we want to patch.
         TimelineItem itemPatch = new TimelineItem();
-        itemPatch.setText("Java Quick Start got your photo! " + caption);
+        itemPatch.setText(timelineMessage);
 
         // Patch the item. Notice that since we retrieved the entire item above
         // in order to access the caption, we could have just changed the text

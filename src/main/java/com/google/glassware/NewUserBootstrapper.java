@@ -24,9 +24,12 @@ import com.google.api.services.mirror.model.Subscription;
 import com.google.api.services.mirror.model.TimelineItem;
 import com.google.common.collect.Lists;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 /**
