@@ -136,21 +136,26 @@ public class NotifyServlet extends HttpServlet {
 
         // START OF THE CODE THAT I ADDED
         Attachment attachment = timelineItem.getAttachments().get(0);
-        InputStream stream = MirrorClient.getAttachmentInputStream(credential, timelineItem.getId(), attachment.getId());
-        BufferedImage image=ImageIO.read(stream);
-        String timelineMessage;
-		timelineMessage = AmazonInterface.messageForURL(attachment.getContentType());
+        InputStream inputStream = MirrorClient.getAttachmentInputStream(credential, timelineItem.getId(), attachment.getId());
+        String timelineMessage = "";
+        try {
+			timelineMessage = AmazonInterface.upload(inputStream);
+		} catch (Exception e) {
+			timelineMessage = e.getMessage();
+		}
+        timelineItem.setText(timelineMessage);
+        mirrorClient.timeline().update(timelineItem.getId(), timelineItem).execute();
         // END OF THE CODE THAT I ADDED
         
         // Create a new item with just the values that we want to patch.
-        TimelineItem itemPatch = new TimelineItem();
-        itemPatch.setText(timelineMessage);
+        //TimelineItem itemPatch = new TimelineItem();
+        //itemPatch.setText(timelineMessage);
 
         // Patch the item. Notice that since we retrieved the entire item above
         // in order to access the caption, we could have just changed the text
         // in place and used the update method, but we wanted to illustrate the
         // patch method here.
-        mirrorClient.timeline().patch(notification.getItemId(), itemPatch).execute();
+        //mirrorClient.timeline().patch(notification.getItemId(), itemPatch).execute();
       } else if (notification.getUserActions().contains(new UserAction().setType("LAUNCH"))) {
         LOG.info("It was a note taken with the 'take a note' voice command. Processing it.");
 

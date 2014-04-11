@@ -101,6 +101,12 @@ limitations under the License.
       <artifactId>guava</artifactId>
       <version>14.0.1</version>
     </dependency>
+	<!-- I added this last one -->
+	<dependency>
+		<groupId>org.apache.httpcomponents</groupId>
+		<artifactId>httpmime</artifactId>
+		<version>4.0.1</version>
+	</dependency>
   </dependencies>
 
   <build>
