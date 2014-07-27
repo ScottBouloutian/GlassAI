@@ -1,12 +1,12 @@
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\AuthServlet.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\ListableMemoryCredentialStore.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\MainServlet.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\bouloutian\connect_four\AmazonInterface.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\ReauthFilter.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\MirrorClient.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\AuthUtil.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\NotifyServlet.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\AttachmentProxyServlet.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\WebUtil.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\NewUserBootstrapper.java
-C:\Users\Scott Bouloutian\Desktop\GlassAI\src\main\java\com\google\glassware\AuthFilter.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/NewUserBootstrapper.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/AuthFilter.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/ListableMemoryCredentialStore.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/ReauthFilter.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/NotifyServlet.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/MirrorClient.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/AttachmentProxyServlet.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/MainServlet.java
+/home/scott/git/GlassAI/src/main/java/com/bouloutian/connect_four/AmazonInterface.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/WebUtil.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/AuthServlet.java
+/home/scott/git/GlassAI/src/main/java/com/google/glassware/AuthUtil.java

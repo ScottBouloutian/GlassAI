@@ -139,7 +139,7 @@ public class NotifyServlet extends HttpServlet {
         InputStream inputStream = MirrorClient.getAttachmentInputStream(credential, timelineItem.getId(), attachment.getId());
         String timelineMessage = "";
         try {
-			timelineMessage = AmazonInterface.upload(inputStream);
+			timelineMessage = AmazonInterface.upload(ImageIO.read(inputStream));
 		} catch (Exception e) {
 			timelineMessage = e.getMessage();
 		}
